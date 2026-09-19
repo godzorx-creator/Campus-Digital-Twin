@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusTwin | Smart Campus Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏫</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loader" class="loader">
+  <div class="loader-spinner"></div>
+  <p>Initializing CampusTwin...</p>
+</div>
+
+<div class="app">
+<aside id="sidebar">
+  <div class="brand">
+    <div class="logo">CT</div>
+    <div><b>CampusTwin</b><small>Smart Campus</small></div>
+    <button id="close">×</button>
+  </div>
+  <div class="online"><i></i> SYSTEM ONLINE <span>99.9%</span></div>
+  <nav>
+    <a class="active" href="#dashboard">⌂ <span>Dashboard</span></a>
+    <a href="#mapSection">⌖ <span>Campus Map</span></a>
+    <a href="#buildings">▦ <span>Buildings</span></a>
+    <a href="#facilities">◈ <span>Facilities</span></a>
+    <a href="#analytics">◒ <span>Crowd Analytics</span></a>
+    <a href="#energy">ϟ <span>Energy Monitoring</span></a>
+    <a href="#issues">! <span>Issues &amp; Alerts</span><em>3</em></a>
+    <a href="#settings">⚙ <span>Settings</span></a>
+  </nav>
+  <div class="sidefoot"><i></i><div><b>Live telemetry</b><small>Updated just now</small></div></div>
+</aside>
+
+<div id="overlay"></div>
+
+<main>
+<header>
+  <div class="title">
+    <button id="menu">☰</button>
+    <div><small>DIGITAL TWIN / OVERVIEW</small><h1>Smart Campus Dashboard</h1></div>
+  </div>
+  <div class="actions">
+    <div class="search">⌕<input id="search" placeholder="Search buildings, facilities... (Ctrl+K)"></div>
+    <div class="weather" id="weather">
+      <span class="weather-icon" id="weatherIcon">☀️</span>
+      <span class="weather-temp" id="weatherTemp">28°C</span>
+      <span class="weather-desc" id="weatherDesc">Clear</span>
+    </div>
+    <time id="clock"></time>
+    <button id="notify">♢<sup>3</sup></button>
+    <button id="profile"><span>AD</span><b>Admin<small>Campus Ops</small></b>⌄</button>
+    <div class="drop" id="notifications">
+      <b>Notifications</b>
+      <p>🔴 Parking is 90% full <small>2 min ago</small></p>
+      <p>🟡 Cafeteria crowd is high <small>8 min ago</small></p>
+      <p>🔵 Library occupancy updated <small>14 min ago</small></p>
+    </div>
+    <div class="drop profileDrop" id="profileDrop">
+      <b>Admin account</b>
+      <button>View profile</button>
+      <button id="theme">Toggle light mode</button>
+    </div>
+  </div>
+</header>
+
+<section class="page" id="dashboard">
+
+  <!-- Hero -->
+  <div class="hero" data-aos="fade-up">
+    <div>
+      <small>CAMPUS OPERATIONS</small>
+      <h2>Everything connected. <span>One campus view.</span></h2>
+      <p>Monitor buildings, people, facilities and energy from a single digital campus model.</p>
+    </div>
+    <button class="primary" id="refresh">↻ Refresh data</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" id="stats" data-aos="fade-up"></div>
+
+  <!-- Section Head -->
+  <div class="sectionHead">
+    <div><small>REAL-TIME OVERVIEW</small><h2>Campus intelligence</h2></div>
+    <label class="live">● Live</label>
+  </div>
+
+  <!-- Map + Details -->
+  <div class="mapgrid" id="mapSection" data-aos="fade-up">
+    <section class="panel">
+      <div class="panelHead">
+        <div><h3>Interactive Campus Map</h3><p>Click a building marker to inspect live telemetry.</p></div>
+        <div class="legend"><i class="g"></i>Available <i class="y"></i>Moderate <i class="r"></i>Full</div>
+      </div>
+      <div id="map"></div>
+    </section>
+    <section class="panel details">
+      <div class="panelHead">
+        <div><h3 id="bTitle">Select a Building</h3><p id="bSub">Live building telemetry</p></div>
+        <label id="bStatus" class="badge">Waiting</label>
+      </div>
+      <div id="details" class="detailbody">
+        <div class="empty"><b>⌖</b><h3>Explore the campus</h3><p>Select any marker on the map to see rooms, crowd, temperature and energy information.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Crowd Analytics -->
+  <div class="twogrid" id="analytics" data-aos="fade-up">
+    <section class="panel">
+      <div class="panelHead">
+        <div><small>PEOPLE FLOW</small><h3>Crowd trend · 24 hours</h3></div>
+        <strong class="peak" id="peak">412<small>Peak crowd</small></strong>
+      </div>
+      <div class="chart"><canvas id="crowdChart"></canvas></div>
+      <div class="chartfoot">Current <b id="current">412</b> &nbsp;&nbsp; Average <b id="avg">252</b> &nbsp;&nbsp; Peak hour <b>12:00</b></div>
+    </section>
+    <section class="panel">
+      <div class="panelHead">
+        <div><small>AI-READY INSIGHTS</small><h3>Campus pulse</h3></div>
+      </div>
+      <div class="insight">◉ <div><b>Peak period detected</b><p>Student activity is highest between 11:00–14:00.</p></div></div>
+      <div class="insight">ϟ <div><b>Energy efficiency stable</b><p>Current load is within the expected operating range.</p></div></div>
+      <div class="insight">! <div><b>Attention required</b><p>Parking and cafeteria capacity need monitoring.</p></div></div>
+    </section>
+  </div>
+
+  <!-- Facilities + Alerts -->
+  <div class="twogrid" id="facilities" data-aos="fade-up">
+    <section class="panel">
+      <div class="panelHead">
+        <div><small>INFRASTRUCTURE</small><h3>Facility health</h3></div>
+        <button class="link" id="facRefresh">Refresh ↻</button>
+      </div>
+      <div class="facilities" id="facilityList"></div>
+    </section>
+    <section class="panel" id="issues">
+      <div class="panelHead">
+        <div><small>ATTENTION CENTER</small><h3>Live alerts</h3></div>
+        <label class="redpill" id="alertCount">3 active</label>
+      </div>
+      <div id="alerts"></div>
+      <button class="secondary" id="review">Mark visible alerts reviewed</button>
+    </section>
+  </div>
+
+  <!-- Energy -->
+  <div class="twogrid" id="energy" data-aos="fade-up">
+    <section class="panel">
+      <div class="panelHead">
+        <div><small>RESOURCE MONITOR</small><h3>Energy monitoring</h3></div>
+        <label class="live">● Live load</label>
+      </div>
+      <div class="energyStats" id="energyStatsGrid">
+        <div><small>Current load</small><b id="eLoad">684 <i>kW</i></b><span>↑ 4.2%</span></div>
+        <div><small>Today's usage</small><b>8.4 <i>MWh</i></b><span>vs 9.1 MWh yesterday</span></div>
+        <div><small>Peak usage</small><b>912 <i>kW</i></b><span>13:20 today</span></div>
+        <div><small>Efficiency</small><b>87<i>%</i></b><span>Healthy range</span></div>
+      </div>
+      <div class="energyChart"><canvas id="energyChart"></canvas></div>
+    </section>
+    <section class="panel">
+      <div class="panelHead">
+        <div><small>EVENT STREAM</small><h3>Recent activity</h3></div>
+      </div>
+      <div class="timeline" id="timeline">
+        <p>🔵 <b>Building occupancy updated</b><small>2 min ago · CSE Block</small></p>
+        <p>🟡 <b>Parking status updated</b><small>6 min ago · Main Parking</small></p>
+        <p>🟢 <b>Library crowd decreased</b><small>11 min ago · Central Library</small></p>
+        <p>🔴 <b>Lab maintenance reported</b><small>18 min ago · Engineering Block</small></p>
+        <p>🟡 <b>Cafeteria reached high capacity</b><small>23 min ago · Food Court</small></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Settings -->
+  <section class="panel" id="settings" data-aos="fade-up">
+    <div class="panelHead">
+      <div><small>CONTROL CENTER</small><h3>Quick settings</h3></div>
+    </div>
+    <div class="setting">
+      <div><b>Auto-refresh telemetry</b><p>Keep dashboard values updated automatically.</p></div>
+      <label class="switch"><input id="auto" type="checkbox" checked><span></span></label>
+    </div>
+    <div class="setting">
+      <div><b>Compact dashboard</b><p>Reduce spacing to fit more information on screen.</p></div>
+      <label class="switch"><input id="compact" type="checkbox"><span></span></label>
+    </div>
+  </section>
+
+  <!-- Buildings Table -->
+  <section class="panel" id="buildings" data-aos="fade-up">
+    <div class="panelHead">
+      <div><small>CAMPUS DIRECTORY</small><h3>Buildings</h3></div>
+      <span>7 monitored locations</span>
+    </div>
+    <div id="table"></div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <b>CampusTwin</b>
+    <span>Smart Campus Digital Twin</span>
+    <span>CampusTwin © 2026</span>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#mapSection">Map</a>
+    <a href="#issues">Alerts</a>
+  </footer>
+
+</section>
+</main>
+</div>
+
+<!-- Toast -->
+<div id="toast">✓ <div><b id="toastTitle">Data refreshed</b><small id="toastMsg">Campus telemetry is up to date.</small></div></div>
+
+<!-- Scroll to Top -->
+<button id="scrollTop" class="scroll-top" title="Back to top">↑</button>
+
+<!-- AI Chatbot -->
+<div id="chatbot" class="chatbot">
+  <button id="chatToggle" class="chat-toggle">💬</button>
+  <div id="chatPanel" class="chat-panel">
+    <div class="chat-header">
+      <b>🤖 CampusTwin AI</b>
+      <button id="chatClose">×</button>
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <div class="chat-msg bot"><p>Hi! I'm CampusTwin AI. Ask me about campus buildings, occupancy, parking, energy, or facilities.</p></div>
+    </div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="Ask about campus...">
+      <button id="chatSend">→</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
